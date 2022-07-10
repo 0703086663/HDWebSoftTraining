@@ -48,7 +48,7 @@ export const updateUser = async (
   try {
     const updatedUser = await User.findByIdAndUpdate(
       request.params.id,
-      request.payload,
+      (request.payload as object) || {},
       { new: true }
     );
     if (updatedUser) {

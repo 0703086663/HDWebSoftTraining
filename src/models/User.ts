@@ -13,22 +13,22 @@ const userSchema = new Schema(
     username: {
       type: String,
       required: true,
-      lowercase: true
+      lowercase: true,
     },
     fullname: {
-      type: String
+      type: String,
     },
     password: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-userSchema.pre<IUser>("save", async function(next) {
+userSchema.pre<IUser>("save", async function (next) {
   const user = this;
 
   if (!user.isModified("password")) return next();
@@ -39,7 +39,18 @@ userSchema.pre<IUser>("save", async function(next) {
   next();
 });
 
-userSchema.methods.comparePassword = async function(
+// userSchema.pre<IUser>("updateOne", async function (next) {
+//   const user = this;
+
+//   if (!user.isModified("password")) return next();
+
+//   const salt = await bcrypt.genSalt(10);
+//   const hash = await bcrypt.hash(user.password, salt);
+//   user.password = hash;
+//   next();
+// });
+
+userSchema.methods.comparePassword = async function (
   password: string
 ): Promise<Boolean> {
   return await bcrypt.compare(password, this.password);

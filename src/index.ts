@@ -1,4 +1,4 @@
 import { init } from "./app";
-import './database';
+import "./database";
 
 init();
