@@ -21,6 +21,12 @@ const eventObject = Joi.object({
     .required()
     .description("The object ID of Voucher.")
     .label("voucherId"),
+  maxQuantity: Joi.number()
+    .example(10)
+    .required()
+    .integer()
+    .min(0)
+    .description("The maximum quantity of the voucher"),
   endDate: Joi.date()
     .required()
     .example("12/31/2022 23:59:59")

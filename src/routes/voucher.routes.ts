@@ -27,13 +27,6 @@ const voucherObject = Joi.object({
     .min(0)
     .max(100)
     .description("The percentage (%) of the voucher"),
-  quantity: Joi.number()
-    .example(10)
-    .required()
-    .integer()
-    .positive()
-    .min(0)
-    .description("The quantity of the voucher"),
   constraint: Joi.string()
     .example("One use only")
     .description("Limit the number of uses or vouchers"),

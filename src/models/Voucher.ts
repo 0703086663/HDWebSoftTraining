@@ -5,8 +5,6 @@ export interface IVoucher extends Document {
   desc: string;
   discount: number;
   constraint: string;
-  quantity: number;
-  enable: boolean;
 }
 
 const voucherSchema = new Schema(
@@ -24,14 +22,6 @@ const voucherSchema = new Schema(
       required: true,
       default: 0,
     },
-    quantity: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    enable: {
-      type: Boolean,
-    },
     constraint: {
       type: String,
     },
@@ -40,16 +30,5 @@ const voucherSchema = new Schema(
     timestamps: true,
   }
 );
-
-voucherSchema.pre<IVoucher>("save", function (next) {
-  const voucher = this;
-
-  if (voucher.quantity > 0) {
-    voucher.enable = true;
-    return next();
-  }
-  voucher.enable = false;
-  next();
-});
 
 export default model<IVoucher>("Voucher", voucherSchema);
