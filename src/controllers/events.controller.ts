@@ -74,3 +74,107 @@ export const deleteEvent = async (
     return h.response(err).code(500);
   }
 };
+
+export const editEventCheck = async (
+  request: Request,
+  h: ResponseToolkit
+): Promise<ResponseObject> => {
+  try {
+    const event = await Event.findOne({ _id: request.params.id }); //Find event by ID
+    if (!event) return h.response("Not found").code(404); //Not found event
+    else if (event.editable == false)
+      return h.response("Not allowed").code(409); //Not allowed for edit
+    return h.response(event).code(200); //Editable
+  } catch (err) {
+    return h.response(err).code(500);
+  }
+};
+
+export const editEventRelease = async (
+  request: Request,
+  h: ResponseToolkit
+): Promise<ResponseObject> => {
+  try {
+    const event = await Event.findByIdAndDelete(request.params.id);
+    if (event) {
+      return h.response(event + "can be edited").code(200);
+    }
+    return h.response("Not allowed").code(409);
+  } catch (err) {
+    return h.response(err).code(500);
+  }
+};
+
+export const editEventMaintain = async (
+  request: Request,
+  h: ResponseToolkit
+): Promise<ResponseObject> => {
+  try {
+    await Event.findById(request.params.id)
+      .then((event) => {
+        if (event?.editable == false) {
+          setTimeout(() => {
+            console.log(1);
+            Event.findByIdAndUpdate(request.params.id, {
+              $set: { editable: true },
+            });
+          }, 10000);
+        } else {
+          console.log(2);
+          Event.findByIdAndUpdate(request.params.id, {
+            $set: { editable: false },
+          });
+        }
+      })
+      .catch((err) => {});
+
+    // const event = await Event.findOne({
+    //   $and: [{ _id: request.params.id }, { editable: false }],
+    // });
+    // if (event) {
+    //   Event.findByIdAndUpdate(request.params.id, {
+    //     $set: { editable: false },
+    //   });
+    //   setTimeout(() => {
+    //     console.log(1);
+    //     Event.findByIdAndUpdate(request.params.id, {
+    //       $set: { editable: true },
+    //     });
+    //   }, 10000);
+    // } else {
+    //   await Event.findByIdAndUpdate(request.params.id, {
+    //     $set: { editable: false },
+    //   });
+    //   setTimeout(() => {
+    //     console.log(2);
+    //     Event.findByIdAndUpdate(request.params.id, {
+    //       $set: { editable: true },
+    //     });
+    //   }, 10000);
+    // }
+
+    // const event = await Event.findByIdAndUpdate(request.params.id, {
+    //   $set: { editable: false },
+    // });
+
+    // if (event) {
+    //   setTimeout(function () {
+    //     Event.findByIdAndUpdate(
+    //       request.params.id,
+    //       {
+    //         $set: { editable: true },
+    //       },
+    //       (err, result) => {
+    //         if (err) {
+    //           console.log(err);
+    //         }
+    //       }
+    //     );
+    //   }, 10000);
+    //   return h.response(event);
+    // }
+    return h.response().code(404);
+  } catch (err) {
+    return h.response(err).code(500);
+  }
+};

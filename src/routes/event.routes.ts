@@ -8,6 +8,9 @@ import {
   getEvent,
   updateEvent,
   deleteEvent,
+  editEventCheck,
+  editEventRelease,
+  editEventMaintain,
 } from "../controllers/events.controller";
 
 const eventObject = Joi.object({
@@ -34,6 +37,7 @@ const eventObject = Joi.object({
 }).label("Event");
 
 export const eventRoutes = (server: Server) => {
+  // [POST] /event
   server.route({
     method: "POST",
     path: "/event",
@@ -49,6 +53,7 @@ export const eventRoutes = (server: Server) => {
     },
   });
 
+  // [GET] /event/all
   server.route({
     method: "GET",
     path: "/event/all",
@@ -61,9 +66,10 @@ export const eventRoutes = (server: Server) => {
     },
   });
 
+  // [GET] /event/:id
   server.route({
     method: "GET",
-    path: "/event/{id}/",
+    path: "/event/{id}",
     // handler: getEvent,
     options: {
       handler: getEvent,
@@ -80,6 +86,7 @@ export const eventRoutes = (server: Server) => {
     },
   });
 
+  // [PUT] /event/:id
   server.route({
     method: "PUT",
     path: "/event/{id}",
@@ -101,6 +108,7 @@ export const eventRoutes = (server: Server) => {
     },
   });
 
+  // [DELETE] /event/:id
   server.route({
     method: "DELETE",
     path: "/event/{id}",
@@ -116,5 +124,29 @@ export const eventRoutes = (server: Server) => {
         }),
       },
     },
+  });
+
+  // [POST] /event/:id/editable/me
+  server.route({
+    method: "POST",
+    path: "/event/{id}/editable/me",
+    // notes: "Return the event if it is editable",
+    handler: editEventCheck,
+  });
+
+  // [POST] /event/:id/editable/release
+  server.route({
+    method: "POST",
+    path: "/event/{id}/editable/release",
+    // notes: "Return the event if it is editable",
+    handler: editEventRelease,
+  });
+
+  // [POST] /event/:id/editable/maintain
+  server.route({
+    method: "POST",
+    path: "/event/{id}/editable/maintain",
+    // notes: "Return the event if it is editable",
+    handler: editEventMaintain,
   });
 };

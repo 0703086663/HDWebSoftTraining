@@ -7,6 +7,7 @@ export interface IEvent extends Document {
   maxQuantity: number;
   enable: boolean;
   endDate: Date;
+  editable: boolean;
 }
 
 const eventSchema = new Schema(
@@ -30,6 +31,10 @@ const eventSchema = new Schema(
     },
     endDate: {
       type: Date,
+    },
+    editable: {
+      type: Boolean,
+      default: true,
     },
   },
   {
