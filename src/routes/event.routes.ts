@@ -130,23 +130,60 @@ export const eventRoutes = (server: Server) => {
   server.route({
     method: "POST",
     path: "/event/{id}/editable/me",
-    // notes: "Return the event if it is editable",
-    handler: editEventCheck,
+    // handler: editEventCheck,
+    options: {
+      handler: editEventCheck,
+      description: "Check event",
+      notes: "Check and display event if editable",
+      tags: ["api", "event"],
+      validate: {
+        params: Joi.object({
+          id: Joi.string().required().description("The id of event to check"),
+        }),
+      },
+    },
   });
 
   // [POST] /event/:id/editable/release
   server.route({
     method: "POST",
     path: "/event/{id}/editable/release",
-    // notes: "Return the event if it is editable",
-    handler: editEventRelease,
+    // handler: editEventRelease,
+    options: {
+      handler: editEventRelease,
+      description: "Update a release event",
+      notes: "Event object that needs to be updated to the database",
+      tags: ["api", "event"],
+      validate: {
+        params: Joi.object({
+          id: Joi.string()
+            .example("62c2a8fd2900583affbe8358")
+            .required()
+            .description("The id of event need to be updated"),
+        }),
+        payload: eventObject,
+      },
+    },
   });
 
   // [POST] /event/:id/editable/maintain
   server.route({
     method: "POST",
     path: "/event/{id}/editable/maintain",
-    // notes: "Return the event if it is editable",
-    handler: editEventMaintain,
+    // handler: editEventMaintain,
+    options: {
+      handler: editEventMaintain,
+      description: "Maintain event",
+      notes: "Make current event to uneditable for 5 minutes",
+      tags: ["api", "event"],
+      validate: {
+        params: Joi.object({
+          id: Joi.string()
+            .required()
+            .description("The id of event to maintain"),
+        }),
+        payload: eventObject,
+      },
+    },
   });
 };

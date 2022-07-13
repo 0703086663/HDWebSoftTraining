@@ -6,6 +6,7 @@ const HapiSwagger = require("hapi-swagger");
 import { routes } from "./routes/user.routes";
 import { eventRoutes } from "./routes/event.routes";
 import { voucherRoutes } from "./routes/voucher.routes";
+import { mailRoutes } from "./routes/mail.routes";
 
 export const init = async () => {
   const server = Hapi.server({
@@ -29,6 +30,7 @@ export const init = async () => {
     },
   ]);
 
+  mailRoutes(server);
   routes(server);
   eventRoutes(server);
   voucherRoutes(server);
