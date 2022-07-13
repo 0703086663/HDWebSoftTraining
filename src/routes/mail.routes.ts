@@ -1,6 +1,6 @@
 import { Server } from "@hapi/hapi";
-
-import { sendVoucherMail } from "../queues/email.queue";
+import Event from "../models/Event";
+import { sendVoucherMail, emailObject } from "../queues/email.queue";
 
 const { createBullBoard } = require("@bull-board/api");
 const { BullAdapter } = require("@bull-board/api/bullAdapter");
@@ -19,7 +19,15 @@ export const mailRoutes = (server: Server) => {
     method: "POST",
     path: "/send-email",
     handler: async (req, res) => {
-      await sendVoucherMail(JSON.stringify(req.payload));
+      const body = <emailObject>req.payload;
+      const event = await Event.findById(body.eventId);
+      if (!event) {
+        return res.response({ status: "Event is not exist" });
+      } else {
+        if (event.maxQuantity <= 0)
+          return res.response({ status: "Out of voucher in this event" });
+      }
+      await sendVoucherMail(body.receiver, body.eventId, body.voucherId);
       return res.response({ status: "Success" });
     },
   });
