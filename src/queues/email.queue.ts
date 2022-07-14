@@ -58,7 +58,6 @@ const sendVoucherMail = async (
     },
   });
 
-  // const mailOptions = JSON.parse(data);
   const mailOptions = {
     from: EMAIL,
     to: receiver,

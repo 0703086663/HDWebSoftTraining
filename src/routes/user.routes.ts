@@ -15,10 +15,11 @@ const userObject = Joi.object({
     .example("johnsmith123")
     .required()
     .description("The username for account"),
-  fullname: Joi.string()
-    .example("John Smith")
+  email: Joi.string()
+    .email({ tlds: { allow: false } })
+    .example("thanhntgcs190601@fpt.edu.vn")
     .required()
-    .description("The fullname of user"),
+    .description("The email of user"),
   password: Joi.string()
     .example(123456)
     .required()

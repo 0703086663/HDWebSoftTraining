@@ -25,6 +25,10 @@ const voucherSchema = new Schema(
     constraint: {
       type: String,
     },
+    voucherReceived: {
+      type: Array,
+      default: [Date],
+    },
   },
   {
     timestamps: true,

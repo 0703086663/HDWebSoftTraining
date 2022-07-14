@@ -11,6 +11,7 @@ import {
   editEventCheck,
   editEventRelease,
   editEventMaintain,
+  getVoucher,
 } from "../controllers/events.controller";
 
 const eventObject = Joi.object({
@@ -183,6 +184,40 @@ export const eventRoutes = (server: Server) => {
             .description("The id of event to maintain"),
         }),
         payload: eventObject,
+      },
+    },
+  });
+
+  // [GET] /event/:id/getVoucher
+  server.route({
+    method: "POST",
+    path: "/event/{id}/getVoucher",
+    options: {
+      handler: getVoucher,
+      description: "Get voucher",
+      notes: "Save transaction and voucher, send voucher to mail",
+      tags: ["api", "event"],
+      validate: {
+        params: Joi.object({
+          id: Joi.string()
+            .required()
+            .example("62cb2ced41d417930bf0d084")
+            .description("The id for the get event item"),
+        }),
+        payload: Joi.object({
+          receiver: Joi.string()
+            .example("ducloc")
+            .required()
+            .description("The username of receiver"),
+          eventDesc: Joi.string()
+            .example("Sale off 50%")
+            .required()
+            .description("The event description"),
+          voucherCode: Joi.string()
+            .example("SALETO50")
+            .required()
+            .description("The voucher code."),
+        }).label("Get Voucher Object"),
       },
     },
   });
