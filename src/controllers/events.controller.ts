@@ -10,6 +10,7 @@ import Voucher from "../models/Voucher";
 
 import { createTransaction } from "../helpers/transactions";
 import { sendVoucherMail } from "../queues/email.queue";
+import console from "console";
 
 interface getVoucherObject {
   receiver: string;
@@ -63,15 +64,18 @@ export const updateEvent = async (
   h: ResponseToolkit
 ): Promise<ResponseObject> => {
   try {
-    const updatedEvent = await Event.findByIdAndUpdate(
+    const event = await Event.findById(request.params.id);
+    if (event?.editable === false) {
+      return h
+        .response({ message: "Events cannot be edited at this time." })
+        .code(400);
+    }
+    await Event.findByIdAndUpdate(
       request.params.id,
       (request.payload as object) || {},
       { new: true }
     );
-    if (updatedEvent) {
-      return h.response(updatedEvent);
-    }
-    return h.response().code(404);
+    return h.response({ message: "Event not found!" }).code(404);
   } catch (err) {
     return h.response(err).code(500);
   }
@@ -128,49 +132,42 @@ export const editEventMaintain = async (
   h: ResponseToolkit
 ): Promise<ResponseObject> => {
   try {
-    // const promise = function timeoutPromise(ms: any, promise: any) {
-    //   return new Promise((resolve, reject) => {
-    //     const timeoutId = setTimeout(() => {
-    //       reject(new Error("promise timeout"));
-    //     }, ms);
-    //     promise.then(
-    //       (res: any) => {
-    //         clearTimeout(timeoutId);
-    //         console.log("thanhcong");
-    //         resolve(res);
-    //         // setTimeout(() => resolve(res), ms);
-    //       },
-    //       (err: any) => {
-    //         clearTimeout(timeoutId);
-    //         console.log("thatbai");
-    //         reject(err);
-    //       }
-    //     );
-    //   });
-    // };
-
-    const event = await Event.findByIdAndUpdate(request.params.id, {
-      // $set: (request.payload as object) || {},
-      editable: false,
-    });
+    const event = await Event.findById(request.params.id);
     if (event) {
-      setTimeout(function () {
+      var second: number = 5; //(seconds) Time to reset timeout
+      const resetTimeout = setInterval(() => {
+        second = second - 1;
+        // Set false first
         Event.findByIdAndUpdate(
           request.params.id,
           {
-            $set: { editable: true },
+            editable: false,
           },
           (err, result) => {
             if (err) {
               console.log(err);
             }
-            console.log("back");
           }
         );
-      }, 5 * 60 * 1000);
-      return h.response(event);
+        // Set true after timeout (5mins)
+        if (second <= 0) {
+          clearInterval(resetTimeout);
+          Event.findByIdAndUpdate(
+            request.params.id,
+            {
+              $set: { editable: true },
+            },
+            (err, result) => {
+              if (err) {
+                console.log(err);
+              }
+            }
+          );
+        }
+      }, 1000); // 1 second in interval
+      return h.response("Event is being edited");
     }
-    return h.response().code(404);
+    return h.response("Event not found").code(404);
   } catch (err) {
     return h.response(err).code(500);
   }
@@ -187,10 +184,10 @@ export const getVoucher = async (
     const voucher = await Voucher.findOne({ code: body.voucherCode });
     if (!event || !receiver || !voucher) {
       return h
-        .response({ status: "Event or User or Voucher is not exist" })
+        .response({ message: "Event or User or Voucher is not exist" })
         .code(404);
     } else if (event.maxQuantity <= 0) {
-      return h.response({ status: "Out of voucher in this event" }).code(406);
+      return h.response({ message: "Out of voucher in this event" }).code(406);
     } else {
       await sendVoucherMail(receiver.email, event._id, voucher._id);
       await createTransaction(
@@ -200,7 +197,7 @@ export const getVoucher = async (
         new Date(Date.now())
       );
       return h
-        .response({ status: "Transaction and send mail have completed" })
+        .response({ message: "Transaction and send mail have completed" })
         .code(200);
     }
   } catch (err) {

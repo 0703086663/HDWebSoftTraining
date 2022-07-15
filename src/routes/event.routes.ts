@@ -169,9 +169,8 @@ export const eventRoutes = (server: Server) => {
 
   // [POST] /event/:id/editable/maintain
   server.route({
-    method: "POST",
+    method: "GET",
     path: "/event/{id}/editable/maintain",
-    // handler: editEventMaintain,
     options: {
       handler: editEventMaintain,
       description: "Maintain event",
@@ -183,7 +182,7 @@ export const eventRoutes = (server: Server) => {
             .required()
             .description("The id of event to maintain"),
         }),
-        payload: eventObject,
+        // payload: eventObject,
       },
     },
   });

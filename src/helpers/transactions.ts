@@ -6,6 +6,7 @@ export async function createTransaction(
   voucherCode: string,
   transactionDates: Date
 ) {
+  // CONNECT TO MONGODB
   const uri =
     "mongodb+srv://admin:admin@hdtrainingcluster.x2gfxia.mongodb.net/?retryWrites=true&w=majority";
   const client = new MongoClient(uri);
