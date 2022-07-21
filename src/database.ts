@@ -24,39 +24,13 @@
 
 import mongoose from "mongoose";
 
-// mongoose
-//   .connect(
-//     "mongodb+srv://admin:admin@hdtrainingcluster.x2gfxia.mongodb.net/?retryWrites=true&w=majority",
-//     {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     }
-//   )
-//   .then((db) => console.log("Db is connected"))
-//   .catch((err) => console.log(err));
-
-var MockMongoose = require("mock-mongoose").MockMongoose;
-var mockMongoose = new MockMongoose(mongoose);
-import {} from "jasmine";
-
-before(function (done: any) {
-  mockMongoose.prepareStorage().then(function () {
-    mongoose
-      .connect(
-        "mongodb+srv://admin:admin@hdtrainingcluster.x2gfxia.mongodb.net/?retryWrites=true&w=majority",
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        }
-      )
-      .then((db) => console.log("Db is connected"))
-      .catch((err) => done(err));
-  });
-});
-
-describe("...", function () {
-  it("...", function (done) {
-    // ...
-    done();
-  });
-});
+mongoose
+  .connect(
+    "mongodb+srv://admin:admin@hdtrainingcluster.x2gfxia.mongodb.net/?retryWrites=true&w=majority",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then((db) => console.log("Db is connected"))
+  .catch((err) => console.log(err));
