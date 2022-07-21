@@ -11,6 +11,7 @@ To do those actions above, my application have been designed by using:
 - Swagger for API docs 
 - Joi for request validations
 - Nodemailer for send email
+
 This unit tests document is written to report for the source code and implementation of it to meet the requirements. This document goes into a basic setup from programming languages to server, database and functions to meet requirements.
  
 Over at all, to run a NodeJS application you need install it to the application through
