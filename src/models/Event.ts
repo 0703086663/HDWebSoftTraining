@@ -8,6 +8,7 @@ export interface IEvent extends Document {
   enable: boolean;
   endDate: Date;
   editable: boolean;
+  editingBy: string;
 }
 
 const eventSchema = new Schema(
@@ -35,6 +36,10 @@ const eventSchema = new Schema(
     editable: {
       type: Boolean,
       default: true,
+    },
+    editingBy: {
+      type: String,
+      default: "",
     },
   },
   {

@@ -10,7 +10,10 @@ import Voucher from "../models/Voucher";
 
 import { createTransaction } from "../helpers/transactions";
 import { sendVoucherMail } from "../queues/email.queue";
-import console from "console";
+
+interface Payload {
+  editingBy: string;
+}
 
 interface getVoucherObject {
   receiver: string;
@@ -102,9 +105,12 @@ export const editEventCheck = async (
 ): Promise<ResponseObject> => {
   try {
     const event = await Event.findOne({ _id: request.params.id }); //Find event by ID
-    if (!event) return h.response("Not found").code(404); //Not found event
-    else if (event.editable == false)
-      return h.response("Not allowed").code(409); //Not allowed for edit
+    if (!event)
+      return h.response("Event not found").code(404); //Not found event
+    else if (event.editable === false)
+      return h
+        .response("Not allowed. " + event.editingBy + " is editing")
+        .code(409); //Not allowed for edit
     return h.response("Allowed edit").code(200); //Editable
   } catch (err) {
     return h.response(err).code(500);
@@ -116,12 +122,11 @@ export const editEventRelease = async (
   h: ResponseToolkit
 ): Promise<ResponseObject> => {
   try {
-    console.log(request.payload);
     const event = await Event.findById(request.params.id);
     if (event) {
       return h.response(event).code(200);
     }
-    return h.response("Not allowed").code(409);
+    return h.response("Not allowed.").code(409);
   } catch (err) {
     return h.response(err).code(500);
   }
@@ -132,16 +137,17 @@ export const editEventMaintain = async (
   h: ResponseToolkit
 ): Promise<ResponseObject> => {
   try {
+    const body = <Payload>request.payload;
     const event = await Event.findById(request.params.id);
     if (event) {
-      var second: number = 5; //(seconds) Time to reset timeout
+      var second: number = 5 * 60; // ~ 5mins - Time to reset timeout (seconds)
       const resetTimeout = setInterval(() => {
         second = second - 1;
         // Set false first
         Event.findByIdAndUpdate(
           request.params.id,
           {
-            editable: false,
+            $set: { editable: false, editingBy: body.editingBy },
           },
           (err, result) => {
             if (err) {
@@ -155,7 +161,7 @@ export const editEventMaintain = async (
           Event.findByIdAndUpdate(
             request.params.id,
             {
-              $set: { editable: true },
+              $set: { editable: true, editingBy: null },
             },
             (err, result) => {
               if (err) {
