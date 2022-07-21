@@ -141,8 +141,7 @@ npm install mongoose
 npm install @types/mongoose
 ```
 Therefore, before running mongoose in application, I need to create an mongoDB account on website or by mongoDB Compass then create a database and cluster to store data. After create a database to store data, I choose connect the application then I got a connect string like
-``` mongodb+srv://admin:<password>@hdtrainingcluster.x2gfxia.mongodb.net/?retryWrites=true&w=majority
-```
+> mongodb+srv://admin:<password>@hdtrainingcluster.x2gfxia.mongodb.net/?retryWrites=true&w=majority
 After that I replace password and cluster which is designed above then add it to the database.ts
 ```typescript
 import mongoose from "mongoose";
@@ -166,11 +165,14 @@ And log the notification if it connected or error if not
 
 ## Swagger
 Continue with Hapi server and following the requirements, I use swagger for API docs. To install swagger, I also need to install inert and vision plugs-ins which support templates and static content serving.
+```
 npm install hapi-swagger
 npm install @hapi/vision
 npm install @hapi/inert
+```
 Then install it to application through the app.ts, then after implement the application, I can get into localhost:3000/documentation to read the API docs for the application, but it is needed to install Joi to create modal on Swagger API docs.
-  const swaggerOptions = {
+```typescript
+const swaggerOptions = {
 	info: {
   	title: "Voucher API Documentation",
   	version: "1.0.0",
@@ -185,14 +187,20 @@ Then install it to application through the app.ts, then after implement the appl
   	options: swaggerOptions,
 	},
   ]);
+ ```
  
-Agenda
+## Agenda
 To set up a job that run every minute like check if the database connection is good or not, Agenda is a light-weight job scheduling library for Node.js. Agenda's basic control structure is an instance of an agenda. Agenda's are mapped to a database collection and load the jobs from within.
 To install agenda for the application, use:
+```
 npm install agenda
+```
 Then for the TypeScript import agenda to the application, use:
+```
 import { Agenda } from "agenda";
+```
 After that, use the mongo connect string to define the uri to connect to the database and use agenda to check connection every minute.
+```typescript
 import mongoose from "mongoose";
 import { Agenda } from "agenda";
  
@@ -216,16 +224,19 @@ agenda.define("mongodbConnectCheck", async () => {
  
   await agenda.every("every minute", "mongodbConnectCheck");
 })();
+```
+In the function ``` agenda.every() ```, I can change the every minute to another time schedule defend on the requirement of system.
  
-In the function agenda.every(), I can change the every minute to another time schedule defend on the requirement of system.
- 
-Bull
+## Bull
 To handle the master or worker processing, Bull is popular among large and small organizations.
 Bull welcomes all types of contributions, either code fixes, new features or doc improvements. Code formatting is enforced by prettier. For commits please follow conventional commits convention. All code must pass lint rules and test suites before it can be merged into develop.
 To install Bull for application with TypeScript use:
+```
 npm install bull
 npm install @types/bull –save-dev
+```
 So it is a good choice to choose Bull for email queue working, for basic setup to run bull in NodeJS following the docs of Bull, the code are:
+```typescript
 import Queue from "bull";
  
 // QUEUE FOR EMAIL
@@ -248,11 +259,17 @@ emailQueue.process(async (job, done) => {
 	done();
   }
 });
+```
+
 Because Bull is the framework to support application for create a job queue to handle the processing of each one then run later, so it needs a job during the process of Queue. Depend on requirement, send voucher email is a process that needs a Queue in Bull to process each email then send to customer. In this work, nodemailer needs to be installed to support sending email.
-Nodemailer
+
+## Nodemailer
 Nodemailer is a module for Node.js applications to allow easy as cake email sending. It is the solution most Node.js developers turn to by default. To install nodemailer:
+``` 
 npm install nodemailer
+```
 Then import it to the queue file above to create a send mail function which can be added to the queue and processed before sending or canceled if error occurs.
+```typescript 
 import nodemailer from "nodemailer";
 import { EMAIL, PASSWORD } from "../secrets/secrets";
 import Event from "../models/Event";
@@ -305,6 +322,7 @@ const sendVoucherMail = async (
 };
  
 export { sendVoucherMail };
+```
  
 To use nodemailer, I need to get email and password for the sender from Gmail example. Then Create a Nodemailer transporter using either SMTP or some other transport mechanism and Set up message options (who sends what to whom). After complete work above, Deliver the message object using the sendVoucherMail() method of your previously created transporter and send email or add to Queue to process.
  
