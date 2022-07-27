@@ -1,38 +1,34 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IVoucher extends Document {
+  name: string;
   code: string;
-  desc: string;
-  discount: number;
-  constraint: string;
+  eventId: string;
+  receiverId: string;
+  expiredAt: Date;
 }
 
-const voucherSchema = new Schema(
-  {
-    code: {
-      type: String,
-      required: true,
-      uppercase: true,
-    },
-    desc: {
-      type: String,
-    },
-    discount: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    constraint: {
-      type: String,
-    },
-    voucherReceived: {
-      type: Array,
-      default: [Date],
-    },
+const voucherSchema = new Schema({
+  name: { type: String },
+  code: {
+    type: String,
+    required: true,
+    uppercase: true,
   },
-  {
-    timestamps: true,
-  }
-);
+  eventId: {
+    type: Types.ObjectId,
+  },
+  receiverId: {
+    type: Types.ObjectId,
+  },
+  receivedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  expiredAt: {
+    type: Date,
+    required: true,
+  },
+});
 
 export default model<IVoucher>("Voucher", voucherSchema);

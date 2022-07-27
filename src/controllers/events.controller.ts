@@ -1,25 +1,15 @@
-import {
-  Request,
-  ResponseToolkit,
-  ResponseObject,
-  // NextFunction,
-} from "@hapi/hapi";
+import { Request, ResponseToolkit, ResponseObject } from "@hapi/hapi";
 import Event from "../models/Event";
 import User from "../models/User";
 import Voucher from "../models/Voucher";
+import { startSession } from "mongoose";
 
-import { createTransaction } from "../helpers/transactions";
+import { commitWithRetry } from "../helpers/voucherTransactions";
 import { sendVoucherMail } from "../queues/email.queue";
 
-interface Payload {
-  editingBy: string;
-}
-
 interface getVoucherObject {
+  eventId: string;
   receiver: string;
-  eventDesc: string;
-  voucherCode: string;
-  // receivedAt: Date;
 }
 
 export const createEvent = async (
@@ -67,20 +57,17 @@ export const updateEvent = async (
   h: ResponseToolkit
 ): Promise<ResponseObject> => {
   try {
-    const event = await Event.findById(request.params.id);
-    if (event?.editable === false) {
-      return h
-        .response({ message: "Events cannot be edited at this time." })
-        .code(400);
-    }
-    await Event.findByIdAndUpdate(
+    const event = await Event.findByIdAndUpdate(
       request.params.id,
       (request.payload as object) || {},
       { new: true }
     );
-    return h.response({ message: "Event not found!" }).code(404);
-  } catch (err) {
-    return h.response(err).code(500);
+    if (event) {
+      return h.response(event);
+    }
+    return h.response().code(404);
+  } catch (error) {
+    return h.response(error).code(500);
   }
 };
 
@@ -99,114 +86,61 @@ export const deleteEvent = async (
   }
 };
 
-export const editEventCheck = async (
-  request: Request,
-  h: ResponseToolkit
-): Promise<ResponseObject> => {
-  try {
-    const event = await Event.findOne({ _id: request.params.id }); //Find event by ID
-    if (!event)
-      return h.response("Event not found").code(404); //Not found event
-    else if (event.editable === false)
-      return h
-        .response("Not allowed. " + event.editingBy + " is editing")
-        .code(409); //Not allowed for edit
-    return h.response("Allowed edit").code(200); //Editable
-  } catch (err) {
-    return h.response(err).code(500);
-  }
-};
-
-export const editEventRelease = async (
-  request: Request,
-  h: ResponseToolkit
-): Promise<ResponseObject> => {
-  try {
-    const event = await Event.findById(request.params.id);
-    if (event) {
-      return h.response(event).code(200);
-    }
-    return h.response("Not allowed.").code(409);
-  } catch (err) {
-    return h.response(err).code(500);
-  }
-};
-
-export const editEventMaintain = async (
-  request: Request,
-  h: ResponseToolkit
-): Promise<ResponseObject> => {
-  try {
-    const body = <Payload>request.payload;
-    const event = await Event.findById(request.params.id);
-    if (event) {
-      var second: number = 5 * 60; // ~ 5mins - Time to reset timeout (seconds)
-      const resetTimeout = setInterval(() => {
-        second = second - 1;
-        // Set false first
-        Event.findByIdAndUpdate(
-          request.params.id,
-          {
-            $set: { editable: false, editingBy: body.editingBy },
-          },
-          (err, result) => {
-            if (err) {
-              console.log(err);
-            }
-          }
-        );
-        // Set true after timeout (5mins)
-        if (second <= 0) {
-          clearInterval(resetTimeout);
-          Event.findByIdAndUpdate(
-            request.params.id,
-            {
-              $set: { editable: true, editingBy: null },
-            },
-            (err, result) => {
-              if (err) {
-                console.log(err);
-              }
-            }
-          );
-        }
-      }, 1000); // 1 second in interval
-      return h.response("Event is being edited");
-    }
-    return h.response("Event not found").code(404);
-  } catch (err) {
-    return h.response(err).code(500);
-  }
-};
-
 export const getVoucher = async (
   request: Request,
   h: ResponseToolkit
 ): Promise<ResponseObject> => {
+  const session = await startSession();
+  session.startTransaction({
+    readConcern: { level: "snapshot" },
+    writeConcern: { w: "majority" },
+  });
   try {
     const body = <getVoucherObject>request.payload;
-    const event = await Event.findOne({ desc: body.eventDesc });
-    const receiver = await User.findOne({ email: body.receiver });
-    const voucher = await Voucher.findOne({ code: body.voucherCode });
-    if (!event || !receiver || !voucher) {
-      return h
-        .response({ message: "Event or User or Voucher is not exist" })
-        .code(404);
-    } else if (event.maxQuantity <= 0) {
-      return h.response({ message: "Out of voucher in this event" }).code(406);
+    const event = await Event.findById(body.eventId);
+    if (event) {
+      const receiver = await User.findOne({ email: body.receiver });
+
+      if (!receiver) {
+        return h.response({ message: "User not found!" }).code(404);
+      } else {
+        var updatedEvent = await Event.findOneAndUpdate(
+          { _id: body.eventId, maxQuantity: { $gt: 0 } },
+          { $inc: { maxQuantity: -1 } },
+          { session: session, new: true }
+        );
+
+        if (updatedEvent) {
+          const newVoucher = new Voucher(
+            {
+              name: event.desc,
+              code: Math.floor(100000 + Math.random() * 900000),
+              eventId: event._id,
+              receiverId: receiver._id,
+              expiredAt: event.endDate,
+            },
+            { session: session }
+          );
+          await newVoucher.save();
+
+          await sendVoucherMail(receiver.email, newVoucher._id);
+
+          await commitWithRetry(session);
+
+          return h.response(newVoucher);
+        }
+        return h
+          .response({
+            message: "Voucher is out of stock in this event!",
+          })
+          .code(406);
+      }
     } else {
-      await sendVoucherMail(receiver.email, event._id, voucher._id);
-      await createTransaction(
-        body.receiver,
-        body.eventDesc,
-        body.voucherCode,
-        new Date(Date.now())
-      );
-      return h
-        .response({ message: "Transaction and send mail have completed" })
-        .code(200);
+      return h.response({ message: "Event not found!" }).code(404);
     }
   } catch (err) {
+    console.log(err);
+    await session.abortTransaction();
     return h.response(err).code(500);
   }
 };

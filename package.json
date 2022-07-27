@@ -22,6 +22,8 @@
     "mongoose": "^6.4.2"
   },
   "devDependencies": {
+    "@bull-board/api": "^4.0.1",
+    "@bull-board/express": "^4.0.1",
     "@hapi/inert": "^6.0.5",
     "@hapi/vision": "^6.1.0",
     "@types/bcrypt": "^3.0.0",

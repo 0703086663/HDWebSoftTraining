@@ -12,24 +12,21 @@ import {
 } from "../controllers/vouchers.controller";
 
 const voucherObject = Joi.object({
+  name: { type: String },
   code: Joi.string()
     .example("SALETO50")
     .required()
     .description("Code of voucher"),
-  desc: Joi.string()
-    .example("Sale up to 50%")
-    .description("Description of the voucher"),
-  discount: Joi.number()
-    .integer()
-    .positive()
-    .example(50)
+  eventId: Joi.object({
+    _id: Joi.objectId().required(),
+  }),
+  receiverId: Joi.object({
+    _id: Joi.objectId().required(),
+  }),
+  expiredAt: Joi.date()
     .required()
-    .min(0)
-    .max(100)
-    .description("The percentage (%) of the voucher"),
-  constraint: Joi.string()
-    .example("One use only")
-    .description("Limit the number of uses or vouchers"),
+    .example("12/31/2022 23:59:59")
+    .description("The end voucher for the event."),
 }).label("Voucher");
 
 export const voucherRoutes = (server: Server) => {

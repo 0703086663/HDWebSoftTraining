@@ -27,7 +27,7 @@ export const mailRoutes = (server: Server) => {
         if (event.maxQuantity <= 0)
           return res.response({ status: "Out of voucher in this event" });
       }
-      await sendVoucherMail(body.receiver, body.eventId, body.voucherId);
+      await sendVoucherMail(body.receiver, body.voucherId);
       return res.response({ status: "Success" });
     },
   });

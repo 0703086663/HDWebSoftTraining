@@ -3,14 +3,21 @@ const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
 
 import {
+  editableMe,
+  editableRelease,
+  editableMaintain,
+} from "../controllers/editables.controller";
+
+const editableObject = Joi.object({
+  userId: Joi.string().required(),
+}).label("userId");
+
+import {
   createEvent,
   getEvents,
   getEvent,
   updateEvent,
   deleteEvent,
-  editEventCheck,
-  editEventRelease,
-  editEventMaintain,
   getVoucher,
 } from "../controllers/events.controller";
 
@@ -19,12 +26,6 @@ const eventObject = Joi.object({
     .example("Sale off 50%")
     .required()
     .description("The eventname for account"),
-  voucher: Joi.object({
-    _id: Joi.objectId().required(),
-  })
-    .required()
-    .description("The object ID of Voucher.")
-    .label("voucherId"),
   maxQuantity: Joi.number()
     .example(10)
     .required()
@@ -133,7 +134,7 @@ export const eventRoutes = (server: Server) => {
     path: "/event/{id}/editable/me",
     // handler: editEventCheck,
     options: {
-      handler: editEventCheck,
+      handler: editableMe,
       description: "Check event",
       notes: "Check and display event if editable",
       tags: ["api", "event"],
@@ -141,6 +142,7 @@ export const eventRoutes = (server: Server) => {
         params: Joi.object({
           id: Joi.string().required().description("The id of event to check"),
         }),
+        payload: editableObject,
       },
     },
   });
@@ -151,7 +153,7 @@ export const eventRoutes = (server: Server) => {
     path: "/event/{id}/editable/release",
     // handler: editEventRelease,
     options: {
-      handler: editEventRelease,
+      handler: editableRelease,
       description: "Update a release event",
       notes: "Event object that needs to be updated to the database",
       tags: ["api", "event"],
@@ -162,7 +164,6 @@ export const eventRoutes = (server: Server) => {
             .required()
             .description("The id of event need to be updated"),
         }),
-        payload: eventObject,
       },
     },
   });
@@ -172,7 +173,7 @@ export const eventRoutes = (server: Server) => {
     method: "POST",
     path: "/event/{id}/editable/maintain",
     options: {
-      handler: editEventMaintain,
+      handler: editableMaintain,
       description: "Maintain event",
       notes: "Make current event to uneditable for 5 minutes",
       tags: ["api", "event"],
@@ -182,7 +183,6 @@ export const eventRoutes = (server: Server) => {
             .required()
             .description("The id of event to maintain"),
         }),
-        // payload: eventObject,
       },
     },
   });
@@ -190,32 +190,22 @@ export const eventRoutes = (server: Server) => {
   // [GET] /event/:id/getVoucher
   server.route({
     method: "POST",
-    path: "/event/{id}/getVoucher",
+    path: "/event/getVoucher",
     options: {
       handler: getVoucher,
       description: "Get voucher",
       notes: "Save transaction and voucher, send voucher to mail",
       tags: ["api", "event"],
       validate: {
-        params: Joi.object({
-          id: Joi.string()
+        payload: Joi.object({
+          eventId: Joi.string()
             .required()
             .example("62cb2ced41d417930bf0d084")
             .description("The id for the get event item"),
-        }),
-        payload: Joi.object({
           receiver: Joi.string()
-            .example("ducloc")
+            .example("nguyentienthanh.tgdd@gmail.com")
             .required()
             .description("The username of receiver"),
-          eventDesc: Joi.string()
-            .example("Sale off 50%")
-            .required()
-            .description("The event description"),
-          voucherCode: Joi.string()
-            .example("SALETO50")
-            .required()
-            .description("The voucher code."),
         }).label("Get Voucher Object"),
       },
     },
