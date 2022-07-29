@@ -29,6 +29,8 @@ export async function commitWithRetry(session: ClientSession) {
   try {
     await session.commitTransaction();
     console.log("Transaction committed.");
+    await session.endSession();
+    console.log("Transaction end!");
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);

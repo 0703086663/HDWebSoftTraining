@@ -105,8 +105,11 @@ export const getVoucher = async (
         return h.response({ message: "User not found!" }).code(404);
       } else {
         var updatedEvent = await Event.findOneAndUpdate(
-          { _id: body.eventId, maxQuantity: { $gt: 0 } },
-          { $inc: { maxQuantity: -1 } },
+          {
+            _id: body.eventId,
+            $expr: { $gt: ["$maxQuantity", "$receivedQuantity"] },
+          },
+          { $inc: { receivedQuantity: 1 } },
           { session: session, new: true }
         );
 
@@ -122,11 +125,8 @@ export const getVoucher = async (
             { session: session }
           );
           await newVoucher.save();
-
-          await sendVoucherMail(receiver.email, newVoucher._id);
-
           await commitWithRetry(session);
-
+          await sendVoucherMail(receiver.email, newVoucher._id);
           return h.response(newVoucher);
         }
         return h
